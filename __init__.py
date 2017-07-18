@@ -29,7 +29,7 @@ def clean_html(raw_html):
 class OpenNewsSkill(MycroftSkill):
     def __init__(self):
         super(OpenNewsSkill, self).__init__(name="OpenNewsSkill")
-        self.source = {'Google': 'https://news.google.com/news/?output=rss&ned=<locale>&hl=<language>&q=<topic>'}
+        self.source = {'Google': 'https://news.google.com/news/?output=rss&ned=<locale>&hl=<language>&q=<topic>', 'Reddit': 'https://www.reddit.com/search.xml?q=<topic>&sort=new.rss'}
         self.process = None
 
     def initialize(self):
@@ -43,7 +43,7 @@ class OpenNewsSkill(MycroftSkill):
 
 
     def handle_intent(self, message):
-        if message.datai.get('NewsTopicWord'):
+        if message.data.get('NewsTopicWord'):
             topic = message.data.get("SearchTerms")
         else:
             topic = ''
