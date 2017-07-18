@@ -27,58 +27,39 @@ class OpenNewsSkill(MycroftSkill):
         self.process = None
 
     def initialize(self):
-        intent = IntentBuilder("OpenNewsIntent")
-        .require("NewsKeyword")
-        .require("NewsSourceWord")
+        intent = IntentBuilder("OpenNewsIntent") \
+        .require("NewsKeyword") \
+        .require("NewsSourceWord") \
+        .optional("NewsTopicWord") \
         .build()
         self.register_intent(intent, self.handle_intent)
 
-        intent = IntentBuilder("OpenNewsStopIntent")
-        .require("NewsStopVerb")
-        .require("NewsKeyword")
-        .require("NewsSourceWord")
-        .build()
-        self.register_intent(intent, self.handle_stop)
-
 
     def handle_intent(self, message):
-        try:
-            if message.data['NewsTopicWord']:
-                topic = message.data.get('utterance', '')
-            else:
-                topic = ''
+        if message.data['NewsTopicWord']:
+            topic = message.data.get('utterance', '')
+        else:
+            topic = ''
 
-            source = self.source[message.data['NewsSourceWord']]
-            source = source.replace('<locale>','in')
-            source = source.replace('<language>','en')
-            source = source.replace('<topic>',topic)
-            LOGGER.info(source)
-            feed = feedparser.parse(source)
-            #self.stop(self)
-
-            self.speak_dialog('open.news')
-            self.speak('Here\'s the latest headlines from ' +
-                message.data['NewsSourceWord'])
-            items = feed.get('items', [])
-
-            if len(items) > 5:
-                items = items[:5]
-
-            for i in items:
-                self.speak(i['title'])
-                self.speak(clean_html(i['description'])
-
-        except Exception as e:
-            LOGGER.error("Error: {0}".format(e))
-
-    def handle_stop(self, message):
+        source = self.source[message.data['NewsSourceWord']]
+        source = source.replace('<locale>','in')
+        source = source.replace('<language>','en')
+        source = source.replace('<topic>',topic)
+        LOGGER.info(source)
+        feed = feedparser.parse(source)
         #self.stop(self)
-        self.speak_dialog('open.news.stop')
 
-    def stop(self):
-        if self.process and self.process.poll() is None:
-            self.process.terminate()
-            self.process.wait()
+        self.speak_dialog('open.news')
+        self.speak('Here\'s the latest headlines from ' +
+                message.data['NewsSourceWord'])
+        items = feed.get('items', [])
+
+        if len(items) > 5:
+            items = items[:5]
+
+        for i in items:
+            self.speak(i['title'])
+            self.speak(clean_html(i['description']))
 
 
 def create_skill():
