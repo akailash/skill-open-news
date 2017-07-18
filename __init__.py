@@ -5,13 +5,19 @@ import re
 
 from adapt.intent import IntentBuilder
 from mycroft.skills.core import MycroftSkill
-from mycroft.util import play_mp3
 from mycroft.util.log import getLogger
 
 __author__ = 'akailash'
 
 LOGGER = getLogger(__name__)
 
+try:
+    # Python 2.6-2.7
+    from HTMLParser import HTMLParser
+except ImportError:
+    from html.parser import HTMLParser
+
+html_parser = HTMLParser()
 
 def clean_html(raw_html):
     """ Remove html tags from string. """
@@ -30,14 +36,15 @@ class OpenNewsSkill(MycroftSkill):
         intent = IntentBuilder("OpenNewsIntent") \
         .require("NewsKeyword") \
         .require("NewsSourceWord") \
-        .optional("NewsTopicWord") \
+        .optionally("SearchTerms") \
+        .optionally("NewsTopicWord") \
         .build()
         self.register_intent(intent, self.handle_intent)
 
 
     def handle_intent(self, message):
-        if message.data['NewsTopicWord']:
-            topic = message.data.get('utterance', '')
+        if message.datai.get('NewsTopicWord'):
+            topic = message.data.get("SearchTerms")
         else:
             topic = ''
 
@@ -59,7 +66,7 @@ class OpenNewsSkill(MycroftSkill):
 
         for i in items:
             self.speak(i['title'])
-            self.speak(clean_html(i['description']))
+#            self.speak(clean_html(i['description']))
 
 
 def create_skill():
