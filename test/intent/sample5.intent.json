@@ -1,0 +1,8 @@
+{
+  "utterance": "stop the news",
+  "intent_type": "OpenNewsStopIntent",
+  "intent": {
+    "NewsKeyword": "news",
+    "NewsStopVerb": "stop"
+  }
+}

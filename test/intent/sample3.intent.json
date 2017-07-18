@@ -1,0 +1,7 @@
+{
+  "utterance": "tell me the news",
+  "intent_type": "OpenNewsIntent",
+  "intent": {
+    "NewsKeyword": "news"
+  }
+}
