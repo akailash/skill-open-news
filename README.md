@@ -1,5 +1,4 @@
-# NPR News Skill
+# Open News Skill
 
 ## Usage:
 * `news`
-* `tell me news`
