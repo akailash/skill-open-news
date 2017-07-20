@@ -36,7 +36,7 @@ class OpenNewsSkill(MycroftSkill):
     def initialize(self):
         for country in countries:
             self.register_vocabulary(country.name, "NewsLocaleWord")
-            country_code[country.name] = country.alpha2
+            LOGGER.info(country)
 
         intent = IntentBuilder("OpenNewsIntent") \
         .require("NewsKeyword") \
@@ -55,7 +55,7 @@ class OpenNewsSkill(MycroftSkill):
             topic = ''
 
         if message.data.get('NewsLocaleWord'):
-            locale = country_code[message.data.get('NewsLocaleWord')]
+            locale = countries.get(message.data.get('NewsLocaleWord')).alpha_2
         else:
             locale = 'in'
 
@@ -89,6 +89,7 @@ class OpenNewsSkill(MycroftSkill):
             return
         for i in self.headlines:
             if any(topic in i):
+                self.speak(i['published'])
                 self.speak(clean_html(i['description']))
                 time.sleep(2)
         self.speak_dialog(open.news.stop)
