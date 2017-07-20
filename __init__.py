@@ -85,9 +85,6 @@ class OpenNewsSkill(MycroftSkill):
         LOGGER.info(source)
         feed = feedparser.parse(source)
 
-        self.speak('Here\'s the latest headlines from ' +
-                message.data['NewsSourceWord'] +
-                message.data.get('NewsLocaleWord'))
         items = feed.get('items', [])
 
         if len(items) > 5:
@@ -96,19 +93,19 @@ class OpenNewsSkill(MycroftSkill):
         for i in items:
             self.speak(i['title'])
             time.sleep(3)
-
+        return
 
     def handle_read_intent(self, message):
         if message.data.get('NewsTopicWord'):
             topic = message.data.get("SearchTerms")
         else:
-            self.speak("Sorry, I don't understand. Tell me which headline you want to read more about.")
             return
         for i in self.headlines:
             if any(topic in i):
                 self.speak(i['published'])
                 self.speak(clean_html(i['description']))
                 time.sleep(3)
+        return
 
     def stop(self):
         pass
