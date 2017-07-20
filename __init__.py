@@ -7,6 +7,7 @@ from pycountry import countries
 from adapt.intent import IntentBuilder
 from mycroft.skills.core import MycroftSkill
 from mycroft.util.log import getLogger
+import unicodedata
 
 __author__ = 'akailash'
 
@@ -30,7 +31,15 @@ def clean_html(raw_html):
 class OpenNewsSkill(MycroftSkill):
     def __init__(self):
         super(OpenNewsSkill, self).__init__(name="OpenNewsSkill")
-        self.source = {'Google': 'https://news.google.com/news/?output=rss&ned=<locale>&hl=<language>&q=<topic>', 'Reddit': 'https://www.reddit.com/search.xml?q=<topic>&sort=new.rss'}
+        #TODO find a place to store these source/links outside of code
+        self.source = {
+                'Google': 'https://news.google.com/news/?output=rss&geo=<locale>&ned=<language>&q=<topic>',
+                'Reddit': 'https://www.reddit.com/search.xml?q=<topic>+<locale>&sort=new/.rss',
+                'BBC': 'http://feeds.bbci.co.uk/news/rss.xml',
+                'Fox': 'http://www.wsj.com/xml/rss/3_7085.xml',
+                'CNN': 'http://rss.cnn.com/rss/edition.rss',
+                'Reuters': 'http://feeds.reuters.com/reuters/topNews'
+                }
         self.headlines = None
 
     def initialize(self):
@@ -40,24 +49,34 @@ class OpenNewsSkill(MycroftSkill):
 
         intent = IntentBuilder("OpenNewsIntent") \
         .require("NewsKeyword") \
-        .require("NewsSourceWord") \
+        .optionally("NewsSourceWord") \
         .optionally("SearchTerms") \
         .optionally("NewsTopicWord") \
         .optionally("NewsLocaleWord") \
         .build()
-        self.register_intent(intent, self.handle_intent)
+        self.register_intent(intent, self.handle_headlines_intent)
+
+        intent = IntentBuilder("OpenNewsIntent") \
+                .require("NewsKeyword") \
+                .require("NewsReadWord") \
+                .require("SearchTerms") \
+                .optionally("NewsTopicWord") \
+                .optionally("NewsLocaleWord") \
+                .build()
+        self.register_intent(intent, self.handle_read_intent)
 
 
-    def handle_intent(self, message):
+
+    def handle_headlines_intent(self, message):
         if message.data.get('NewsTopicWord'):
             topic = message.data.get("SearchTerms")
         else:
             topic = ''
 
         if message.data.get('NewsLocaleWord'):
-            locale = countries.get(message.data.get('NewsLocaleWord')).alpha_2
+            locale = message.data.get('NewsLocaleWord')
         else:
-            locale = 'in'
+            locale = ''
 
         source = self.source[message.data['NewsSourceWord']]
         source = source.replace('<locale>',locale)
@@ -67,7 +86,8 @@ class OpenNewsSkill(MycroftSkill):
         feed = feedparser.parse(source)
 
         self.speak('Here\'s the latest headlines from ' +
-                message.data['NewsSourceWord'])
+                message.data['NewsSourceWord'] +
+                message.data.get('NewsLocaleWord'))
         items = feed.get('items', [])
 
         if len(items) > 5:
@@ -75,25 +95,23 @@ class OpenNewsSkill(MycroftSkill):
         self.headlines = items
         for i in items:
             self.speak(i['title'])
-            LOGGER.info(i['link'])
-            time.sleep(2)
-        self.speak_dialog(open.news.stop)
+            time.sleep(3)
 
-    def handle_more_intent(self, message):
+
+    def handle_read_intent(self, message):
         if message.data.get('NewsTopicWord'):
             topic = message.data.get("SearchTerms")
         else:
             self.speak("Sorry, I don't understand. Tell me which headline you want to read more about.")
-            for i in self.headlines:
-                self.speak(i['title'])
             return
         for i in self.headlines:
             if any(topic in i):
                 self.speak(i['published'])
                 self.speak(clean_html(i['description']))
-                time.sleep(2)
-        self.speak_dialog(open.news.stop)
+                time.sleep(3)
 
+    def stop(self):
+        pass
 
 def create_skill():
     return OpenNewsSkill()
