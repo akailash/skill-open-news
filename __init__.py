@@ -2,6 +2,7 @@ import feedparser
 import time
 from os.path import dirname
 import re
+from pycountry import countries
 
 from adapt.intent import IntentBuilder
 from mycroft.skills.core import MycroftSkill
@@ -30,14 +31,19 @@ class OpenNewsSkill(MycroftSkill):
     def __init__(self):
         super(OpenNewsSkill, self).__init__(name="OpenNewsSkill")
         self.source = {'Google': 'https://news.google.com/news/?output=rss&ned=<locale>&hl=<language>&q=<topic>', 'Reddit': 'https://www.reddit.com/search.xml?q=<topic>&sort=new.rss'}
-        self.process = None
+        self.headlines = None
 
     def initialize(self):
+        for country in countries:
+            self.register_vocabulary(country.name, "NewsLocaleWord")
+            country_code[country.name] = country.alpha2
+
         intent = IntentBuilder("OpenNewsIntent") \
         .require("NewsKeyword") \
         .require("NewsSourceWord") \
         .optionally("SearchTerms") \
         .optionally("NewsTopicWord") \
+        .optionally("NewsLocaleWord") \
         .build()
         self.register_intent(intent, self.handle_intent)
 
@@ -48,25 +54,44 @@ class OpenNewsSkill(MycroftSkill):
         else:
             topic = ''
 
+        if message.data.get('NewsLocaleWord'):
+            locale = country_code[message.data.get('NewsLocaleWord')]
+        else:
+            locale = 'in'
+
         source = self.source[message.data['NewsSourceWord']]
-        source = source.replace('<locale>','in')
-        source = source.replace('<language>','en')
+        source = source.replace('<locale>',locale)
+        source = source.replace('<language>','en') #Currently support only English
         source = source.replace('<topic>',topic)
         LOGGER.info(source)
         feed = feedparser.parse(source)
-        #self.stop(self)
 
-        self.speak_dialog('open.news')
         self.speak('Here\'s the latest headlines from ' +
                 message.data['NewsSourceWord'])
         items = feed.get('items', [])
 
         if len(items) > 5:
             items = items[:5]
-
+        self.headlines = items
         for i in items:
             self.speak(i['title'])
-#            self.speak(clean_html(i['description']))
+            LOGGER.info(i['link'])
+            time.sleep(2)
+        self.speak_dialog(open.news.stop)
+
+    def handle_more_intent(self, message):
+        if message.data.get('NewsTopicWord'):
+            topic = message.data.get("SearchTerms")
+        else:
+            self.speak("Sorry, I don't understand. Tell me which headline you want to read more about.")
+            for i in self.headlines:
+                self.speak(i['title'])
+            return
+        for i in self.headlines:
+            if any(topic in i):
+                self.speak(clean_html(i['description']))
+                time.sleep(2)
+        self.speak_dialog(open.news.stop)
 
 
 def create_skill():

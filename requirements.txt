@@ -1,1 +1,2 @@
 feedparser==5.2.1
+pycountry==17.5.14
