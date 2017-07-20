@@ -47,21 +47,20 @@ class OpenNewsSkill(MycroftSkill):
             self.register_vocabulary(country.name, "NewsLocaleWord")
             LOGGER.info(country)
 
-        intent = IntentBuilder("OpenNewsIntent") \
+        intent = IntentBuilder("OpenNewsHeadlinesIntent") \
         .require("NewsKeyword") \
-        .optionally("NewsSourceWord") \
+        .require("NewsSourceWord") \
         .optionally("SearchTerms") \
         .optionally("NewsTopicWord") \
         .optionally("NewsLocaleWord") \
         .build()
         self.register_intent(intent, self.handle_headlines_intent)
 
-        intent = IntentBuilder("OpenNewsIntent") \
-                .require("NewsKeyword") \
+        intent = IntentBuilder("OpenNewsReadIntent") \
+                .require("NewsDescriptionKeyword") \
                 .require("NewsReadWord") \
                 .require("SearchTerms") \
-                .optionally("NewsTopicWord") \
-                .optionally("NewsLocaleWord") \
+                .require("NewsTopicWord") \
                 .build()
         self.register_intent(intent, self.handle_read_intent)
 
@@ -100,8 +99,11 @@ class OpenNewsSkill(MycroftSkill):
             topic = message.data.get("SearchTerms")
         else:
             return
+        if self.headlines is None:
+            return
+        LOGGER.info(topic)
         for i in self.headlines:
-            if any(topic in i):
+            if any(word in i['title'].lower() for word in topic.lower().split()):
                 self.speak(i['published'])
                 self.speak(clean_html(i['description']))
                 time.sleep(3)
