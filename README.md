@@ -19,11 +19,14 @@ To install this skill use one of the methods listed below.
 ## Git-clone install
 
 Go to the skills path and clone this repository and install the required libraries with pip
-	`cd /opt/mycroft/skills/`
-	`git clone https://github.com/akailash/skill-open-news.git`
-	`cd skill-open-news; sudo pip install -r requirements.txt`
+
+`cd /opt/mycroft/skills/`
+`git clone https://github.com/akailash/skill-open-news.git`
+`cd skill-open-news; sudo pip install -r requirements.txt`
+
 Restart Mycroft
-	`./mycroft.sh start`
+
+`./mycroft.sh start`
 
 ## Usage:
 * `headlines from google india about sushma`
